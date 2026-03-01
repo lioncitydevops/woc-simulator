@@ -7,6 +7,7 @@ import {
   getDefaultWarEscalationJ_t1,
   type JVars,
 } from "@/lib/woc-simulator";
+import { runSSWOCComparison } from "@/lib/ss-woc-simulator";
 
 export const dynamic = "force-dynamic";
 
@@ -30,10 +31,12 @@ export async function POST(req: NextRequest) {
 
     const result = runWOCSimulator(J_t, J_t1, op);
     const scenarios = runConflictScenarios(op);
+    const sswocScenarios = runSSWOCComparison(op);
 
     return NextResponse.json({
       result,
       scenarios,
+      sswocScenarios,
     });
   } catch (e) {
     console.error(e);
@@ -52,5 +55,6 @@ export async function GET() {
     op
   );
   const scenarios = runConflictScenarios(op);
-  return NextResponse.json({ result, scenarios });
+  const sswocScenarios = runSSWOCComparison(op);
+  return NextResponse.json({ result, scenarios, sswocScenarios });
 }

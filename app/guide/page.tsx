@@ -66,6 +66,17 @@ export default function GuidePage() {
         </section>
 
         <section className="pt-4 border-t border-[#30363d]">
+          <h2 className="text-lg font-semibold text-white mb-3">SS-WOC (State Space) Model</h2>
+          <p className="mb-3">
+            The <strong>SS-WOC</strong> (Lee) reformulates the same 16 variables in linear state space form:
+            x(t+1) = Φx(t) + Γu(t) + w(t), with E[P(τ)] from a log-normal distribution and Kalman covariance.
+            It is calibrated to the 1979–80 oil crisis and produces credible intervals. On the simulator page,
+            <strong> Original WOC</strong> and <strong>SS-WOC</strong> are shown side by side on the same
+            war-intensity scale (u = 0 to 1) for easy comparison.
+          </p>
+        </section>
+
+        <section className="pt-4 border-t border-[#30363d]">
           <h2 className="text-lg font-semibold text-white mb-3">User Guide</h2>
           <h3 className="font-medium text-white mt-3 mb-2">Steps</h3>
           <ol className="list-decimal list-inside space-y-2 ml-2">

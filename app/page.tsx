@@ -21,9 +21,18 @@ type ScenarioRow = {
   priceChangePct: number;
 };
 
+type SSWOCRow = {
+  u: number;
+  scenario: string;
+  E_P_t1: number;
+  CI95_t1: [number, number];
+  priceChangePct_t1: number;
+};
+
 type ApiResponse = {
   result: SimulatorResult;
   scenarios: ScenarioRow[];
+  sswocScenarios: SSWOCRow[];
 };
 
 export default function Home() {
@@ -63,6 +72,7 @@ export default function Home() {
 
   const r = data?.result;
   const scenarios = data?.scenarios ?? [];
+  const sswoc = data?.sswocScenarios ?? [];
 
   return (
     <main className="min-h-screen p-6 md:p-10 max-w-6xl mx-auto">
@@ -158,37 +168,63 @@ export default function Home() {
           </section>
 
           <section className="p-5 rounded-xl bg-[#161b22] border border-[#30363d]">
-            <h2 className="text-lg font-semibold text-white mb-4">
-              Conflict scenarios (Op = ${r.Op}/bbl)
+            <h2 className="text-lg font-semibold text-white mb-2">
+              Model comparison (P0 = ${r.Op}/bbl)
             </h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm border border-[#30363d] rounded-lg overflow-hidden">
-                <thead>
-                  <tr className="bg-[#21262d]">
-                    <th className="px-4 py-3 text-left font-medium text-[#8b949e]">-Do</th>
-                    <th className="px-4 py-3 text-left font-medium text-[#8b949e]">War intensity</th>
-                    <th className="px-4 py-3 text-right font-medium text-[#8b949e]">Opc ($/bbl)</th>
-                    <th className="px-4 py-3 text-right font-medium text-[#8b949e]">Price change %</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {scenarios.map((s, i) => (
-                    <tr
-                      key={i}
-                      className="border-t border-[#30363d] hover:bg-[#21262d]/50"
-                    >
-                      <td className="px-4 py-2 text-white">{s.Do}</td>
-                      <td className="px-4 py-2 text-[#c9d1d9]">{s.warIntensity}</td>
-                      <td className="px-4 py-2 text-right font-mono text-[#7ee787]">
-                        ${s.Opc}
-                      </td>
-                      <td className="px-4 py-2 text-right font-mono text-[#7ee787]">
-                        +{s.priceChangePct}%
-                      </td>
+            <p className="text-xs text-[#8b949e] mb-4">
+              Original WOC (deterministic) vs SS-WOC (state space, calibrated). Same war-intensity scale for easy comparison.
+            </p>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <div className="overflow-x-auto">
+                <p className="text-xs font-medium text-[#58a6ff] mb-2">Original WOC — Ruiz Estrada et al. (2020)</p>
+                <table className="w-full text-sm border border-[#30363d] rounded-lg overflow-hidden">
+                  <thead>
+                    <tr className="bg-[#21262d]">
+                      <th className="px-2 py-2 text-left font-medium text-[#8b949e]">u</th>
+                      <th className="px-2 py-2 text-left font-medium text-[#8b949e]">Intensity</th>
+                      <th className="px-2 py-2 text-right font-medium text-[#8b949e]">Opc</th>
+                      <th className="px-2 py-2 text-right font-medium text-[#8b949e]">Δ%</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {scenarios.map((s, i) => (
+                      <tr key={i} className="border-t border-[#30363d] hover:bg-[#21262d]/50">
+                        <td className="px-2 py-1.5 text-white">{s.Do}</td>
+                        <td className="px-2 py-1.5 text-[#c9d1d9] text-xs">{s.warIntensity}</td>
+                        <td className="px-2 py-1.5 text-right font-mono text-[#7ee787]">${s.Opc}</td>
+                        <td className="px-2 py-1.5 text-right font-mono text-[#7ee787]">+{s.priceChangePct}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="overflow-x-auto">
+                <p className="text-xs font-medium text-[#a371f7] mb-2">SS-WOC — State Space (Lee)</p>
+                <table className="w-full text-sm border border-[#30363d] rounded-lg overflow-hidden">
+                  <thead>
+                    <tr className="bg-[#21262d]">
+                      <th className="px-2 py-2 text-left font-medium text-[#8b949e]">u</th>
+                      <th className="px-2 py-2 text-left font-medium text-[#8b949e]">Scenario</th>
+                      <th className="px-2 py-2 text-right font-medium text-[#8b949e]">E[P(1)]</th>
+                      <th className="px-2 py-2 text-right font-medium text-[#8b949e]">95% CI</th>
+                      <th className="px-2 py-2 text-right font-medium text-[#8b949e]">Δ%</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sswoc.map((s, i) => (
+                      <tr key={i} className="border-t border-[#30363d] hover:bg-[#21262d]/50">
+                        <td className="px-2 py-1.5 text-white">{s.u}</td>
+                        <td className="px-2 py-1.5 text-[#c9d1d9] text-xs">{s.scenario}</td>
+                        <td className="px-2 py-1.5 text-right font-mono text-[#a371f7]">${s.E_P_t1}</td>
+                        <td className="px-2 py-1.5 text-right font-mono text-[#8b949e] text-xs">
+                          [{s.CI95_t1[0]}, {s.CI95_t1[1]}]
+                        </td>
+                        <td className="px-2 py-1.5 text-right font-mono text-[#a371f7]">+{s.priceChangePct_t1}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </section>
         </>

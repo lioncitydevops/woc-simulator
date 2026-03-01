@@ -24,6 +24,10 @@ Higher |D| and -do imply greater market stress; Opc shows the projected price un
 
 The web app uses preset **J(t)** and **J(t+1)** scenarios (e.g. baseline vs. war escalation) to build A′, then computes |D|, -Do, -do, and Opc.
 
+### SS-WOC (State Space model)
+
+The **SS-WOC** (State Space War Oil Crisis) model (Lee) reformulates the same sixteen-variable setup in linear state space form: **x(t+1) = Φx(t) + Γu(t) + w(t)**, with oil price **E[P(τ)]** from a log-normal conditional distribution (Kalman propagation). It is calibrated to the 1979–80 oil crisis and yields **credible intervals** and **VaR/CVaR**-style outputs. On the app, **Original WOC** and **SS-WOC** are shown **side by side** on the same war-intensity scale (u = 0 to 1) for easy comparison; SS-WOC projections are typically more conservative than the original deterministic Opc.
+
 ---
 
 ## User Guide
@@ -54,8 +58,8 @@ The web app uses preset **J(t)** and **J(t+1)** scenarios (e.g. baseline vs. war
    - **Price change %:** Percentage change from Op to Opc.  
    - **4×4 matrix A′:** The derivative matrix (growth-rate ratios) used to compute |D|.
 
-5. **Use the conflict scenarios table**  
-   The table lists **-Do** levels (0 to 1), **war intensity** labels (Peace → Nuclear/Max), **Opc** at each level, and **price change %**. This shows how oil price and percentage change rise as conflict intensity increases for your chosen *Op*.
+5. **Use the model comparison**  
+   Two tables are shown **side by side**: **Original WOC** (deterministic Opc and % change by -Do / u) and **SS-WOC** (state space: E[P(1)], 95% credible interval, and % change by u). The same war-intensity scale (u = 0 to 1) is used for easy comparison.
 
 ### Tips
 
