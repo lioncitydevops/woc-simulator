@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useEffect } from "react";
 
 type SimulatorResult = {
@@ -195,7 +196,10 @@ export default function Home() {
 
       <footer className="mt-12 pt-6 border-t border-[#30363d] text-xs text-[#8b949e]">
         WOC-Simulator. Mathematical framework: 16 variables (J1–J16) → 4×4 matrix
-        A′ → |D| → -Do → -do → Opc = Op × (1 + -do).
+        A′ → |D| → -Do → -do → Opc = Op × (1 + -do).{" "}
+        <Link href="/guide" className="text-[#58a6ff] hover:underline">
+          Methodology & user guide
+        </Link>
       </footer>
     </main>
   );

@@ -2,6 +2,8 @@
 
 Web deployment of the WOC-Simulator (Ruiz Estrada et al., 2020 — Borsa Istanbul Review). Run oil price simulations under conflict scenarios.
 
+**Documentation:** [Methodology & User Guide](docs/METHODOLOGY_AND_USER_GUIDE.md) — short write-up on the mathematical pipeline and how to use the app. Also available in-app via **Methodology & user guide** in the footer.
+
 ## Run locally
 
 ```bash
