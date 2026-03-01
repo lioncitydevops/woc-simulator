@@ -159,12 +159,6 @@ export function runConflictScenarios(OpBase: number): ConflictScenarioRow[] {
   });
 }
 
-export function getDefaultJ_t(): JVars {
-  const out: JVars = {};
-  for (let i = 1; i <= 16; i++) out[`J${i}`] = 1;
-  return out;
-}
-
 export function getDefaultWarEscalationJ_t1(): JVars {
   return {
     J1: 0.85, J2: 1.85, J3: 1.06, J4: 1.03,
