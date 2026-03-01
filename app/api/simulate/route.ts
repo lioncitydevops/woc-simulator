@@ -7,7 +7,7 @@ import {
   getDefaultWarEscalationJ_t1,
   type JVars,
 } from "@/lib/woc-simulator";
-import { runSSWOCComparison } from "@/lib/ss-woc-simulator";
+import { runSSWOCComparison, runGradeScenarios } from "@/lib/ss-woc-simulator";
 
 export const dynamic = "force-dynamic";
 
@@ -32,11 +32,13 @@ export async function POST(req: NextRequest) {
     const result = runWOCSimulator(J_t, J_t1, op);
     const scenarios = runConflictScenarios(op);
     const sswocScenarios = runSSWOCComparison(op);
+    const gradeScenarios = runGradeScenarios(op, 0.5); // u=0.5 (full conventional war) for grade comparison
 
     return NextResponse.json({
       result,
       scenarios,
       sswocScenarios,
+      gradeScenarios,
     });
   } catch (e) {
     console.error(e);
@@ -56,5 +58,6 @@ export async function GET() {
   );
   const scenarios = runConflictScenarios(op);
   const sswocScenarios = runSSWOCComparison(op);
-  return NextResponse.json({ result, scenarios, sswocScenarios });
+  const gradeScenarios = runGradeScenarios(op, 0.5);
+  return NextResponse.json({ result, scenarios, sswocScenarios, gradeScenarios });
 }

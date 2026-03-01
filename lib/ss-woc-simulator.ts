@@ -1,7 +1,8 @@
 /**
  * SS-WOC: State Space War Oil Crisis Model
- * Based on: Lee, T.H., SS-WOC Paper (State Space Framework for Geopolitical Oil Price Risk)
- * Reformulation of Ruiz Estrada et al. (2020) with Φ, Γ, β calibration from Appendix A.
+ * Canonical source: SS_WOC_Paper.pdf — Lee, T.H., "SS-WOC: A State Space Framework for
+ * Geopolitical Oil Price Risk" (replaces any earlier ss_wpc_paper.pdf).
+ * Reformulation of Ruiz Estrada et al. (2020) with Φ, Γ, β from Appendix A (Table 6).
  */
 
 const N = 16;
@@ -183,4 +184,140 @@ export function spectralRadius(): number {
   }
   const lam = vecDot(matVec(PHI, v), v);
   return Math.abs(lam);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Section 10: Crude Oil Grade Differentiation (SS_WOC_Paper.pdf)
+// βg = Dg ⊙ β; Dg from ϕg (geographic exposure) and ∆costg (processing cost)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const KAPPA_Q = 0.15; // quality amplification (paper: 0.15/bbl)
+const SUPPLY_INDICES = [0, 1, 6, 13]; // J1, J2, J7, J14
+const J9_INDEX = 8;
+
+export interface GradeSpec {
+  id: string;
+  name: string;
+  phi: number;   // geographic exposure [0,1]
+  sulphur: number; // wt%
+  api: number;   // API gravity
+}
+
+// Paper §10.1: ϕg from IEA/EIA; Sg, APIg typical for each benchmark
+export const GRADE_SPECS: GradeSpec[] = [
+  { id: "WTI", name: "WTI", phi: 0.12, sulphur: 0.2, api: 40 },
+  { id: "Brent", name: "Brent", phi: 0.32, sulphur: 0.4, api: 38 },
+  { id: "Urals", name: "Urals", phi: 0.55, sulphur: 1.3, api: 32 },
+  { id: "Dubai", name: "Dubai/Oman", phi: 0.88, sulphur: 2.0, api: 31 },
+  { id: "ArabHeavy", name: "Arab Heavy", phi: 0.95, sulphur: 2.8, api: 28 },
+];
+
+// Eq (22): ∆costg = 0.50·max(0, Sg−0.5) + 0.30·max(0, 35−APIg)
+function deltaCostG(spec: GradeSpec): number {
+  return 0.5 * Math.max(0, spec.sulphur - 0.5) + 0.3 * Math.max(0, 35 - spec.api);
+}
+
+// Eq (23): Dg[j] for supply channels, J9, and other
+function scalingVectorDg(spec: GradeSpec): number[] {
+  const deltaCost = deltaCostG(spec);
+  const supplyScale = spec.phi * (1 + KAPPA_Q * deltaCost);
+  const j9Scale = 0.5 + (1 - spec.phi); // financial channel: deeper futures → higher
+  return BETA.map((_, j) => {
+    if (SUPPLY_INDICES.includes(j)) return supplyScale;
+    if (j === J9_INDEX) return j9Scale;
+    return 1.0;
+  });
+}
+
+// βg = Dg ⊙ β
+export function gradeSensitivityBeta(spec: GradeSpec): number[] {
+  const Dg = scalingVectorDg(spec);
+  return BETA.map((b, j) => (b * (Dg[j] ?? 1)));
+}
+
+// β' Γ for a given beta vector (Brent used as reference in paper)
+function betaGammaProduct(betaVec: number[]): number {
+  return vecDot(betaVec, GAMMA);
+}
+
+const BRENT_BETA_GAMMA = (() => {
+  const brent = GRADE_SPECS.find((g) => g.id === "Brent")!;
+  return betaGammaProduct(gradeSensitivityBeta(brent));
+})();
+
+// Vulnerability decomposition (paper §10.2): V_supply, V_financial, V_total
+export interface GradeVulnerability {
+  V_supply: number;
+  V_financial: number;
+  V_other: number;
+  V_total: number;
+}
+
+export function gradeVulnerability(spec: GradeSpec): GradeVulnerability {
+  const betaG = gradeSensitivityBeta(spec);
+  const total = betaGammaProduct(betaG);
+  if (Math.abs(BRENT_BETA_GAMMA) < 1e-10) {
+    return { V_supply: 0, V_financial: 0, V_other: 0, V_total: 0 };
+  }
+  const denom = BRENT_BETA_GAMMA;
+  let vSupply = 0;
+  for (const j of SUPPLY_INDICES) vSupply += (betaG[j] ?? 0) * (GAMMA[j] ?? 0);
+  let vFinancial = (betaG[J9_INDEX] ?? 0) * (GAMMA[J9_INDEX] ?? 0);
+  let vOther = 0;
+  for (let j = 0; j < N; j++)
+    if (!SUPPLY_INDICES.includes(j) && j !== J9_INDEX)
+      vOther += (betaG[j] ?? 0) * (GAMMA[j] ?? 0);
+  vSupply /= denom;
+  vFinancial /= denom;
+  vOther /= denom;
+  return {
+    V_supply: Math.round(vSupply * 1000) / 1000,
+    V_financial: Math.round(vFinancial * 1000) / 1000,
+    V_other: Math.round(vOther * 1000) / 1000,
+    V_total: Math.round((total / denom) * 1000) / 1000,
+  };
+}
+
+// Mean log price at τ with custom beta (for grade g)
+function meanLogPriceWithBeta(p0: number, u: number, tau: number, betaVec: number[]): number {
+  const invGamma = solveIminusPhiInvGamma();
+  const phiTau = phiPower(tau);
+  const diff = invGamma.map((v, i) => v - vecDot(phiTau[i]!, invGamma));
+  const delta = vecDot(betaVec, diff) * u;
+  return p0 + delta;
+}
+
+// E[P_g(τ)] for grade g
+export function expectedPriceGrade(P0: number, u: number, tau: number, spec: GradeSpec): number {
+  const p0 = Math.log(P0);
+  const betaG = gradeSensitivityBeta(spec);
+  const mu = meanLogPriceWithBeta(p0, u, tau, betaG);
+  const sigma2 = varianceLogPrice(tau);
+  return Math.exp(mu + 0.5 * sigma2);
+}
+
+export interface GradeScenarioRow {
+  id: string;
+  name: string;
+  E_P_t1: number;
+  priceChangePct: number;
+  V_supply: number;
+  V_financial: number;
+  V_total: number;
+}
+
+export function runGradeScenarios(P0: number, u: number): GradeScenarioRow[] {
+  return GRADE_SPECS.map((spec) => {
+    const E1 = expectedPriceGrade(P0, u, 1, spec);
+    const vuln = gradeVulnerability(spec);
+    return {
+      id: spec.id,
+      name: spec.name,
+      E_P_t1: Math.round(E1 * 100) / 100,
+      priceChangePct: Math.round((E1 / P0 - 1) * 1000) / 10,
+      V_supply: vuln.V_supply,
+      V_financial: vuln.V_financial,
+      V_total: vuln.V_total,
+    };
+  });
 }

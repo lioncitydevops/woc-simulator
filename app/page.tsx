@@ -29,10 +29,21 @@ type SSWOCRow = {
   priceChangePct_t1: number;
 };
 
+type GradeRow = {
+  id: string;
+  name: string;
+  E_P_t1: number;
+  priceChangePct: number;
+  V_supply: number;
+  V_financial: number;
+  V_total: number;
+};
+
 type ApiResponse = {
   result: SimulatorResult;
   scenarios: ScenarioRow[];
   sswocScenarios: SSWOCRow[];
+  gradeScenarios: GradeRow[];
 };
 
 export default function Home() {
@@ -73,6 +84,7 @@ export default function Home() {
   const r = data?.result;
   const scenarios = data?.scenarios ?? [];
   const sswoc = data?.sswocScenarios ?? [];
+  const gradeScenarios = data?.gradeScenarios ?? [];
 
   return (
     <main className="min-h-screen p-6 md:p-10 max-w-6xl mx-auto">
@@ -227,6 +239,43 @@ export default function Home() {
               </div>
             </div>
           </section>
+
+          {gradeScenarios.length > 0 && (
+            <section className="mt-8 p-5 rounded-xl bg-[#161b22] border border-[#30363d]">
+              <h2 className="text-lg font-semibold text-white mb-2">
+                Crude oil grade differentiation (SS-WOC §10)
+              </h2>
+              <p className="text-xs text-[#8b949e] mb-4">
+                Grade-specific E[P(1)] and vulnerability (u = 0.5, full conventional war). Brent-normalised V_supply, V_financial, V_total.
+              </p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border border-[#30363d] rounded-lg overflow-hidden">
+                  <thead>
+                    <tr className="bg-[#21262d]">
+                      <th className="px-3 py-2 text-left font-medium text-[#8b949e]">Grade</th>
+                      <th className="px-3 py-2 text-right font-medium text-[#8b949e]">E[P(1)]</th>
+                      <th className="px-3 py-2 text-right font-medium text-[#8b949e]">Δ%</th>
+                      <th className="px-3 py-2 text-right font-medium text-[#8b949e]">V_supply</th>
+                      <th className="px-3 py-2 text-right font-medium text-[#8b949e]">V_financial</th>
+                      <th className="px-3 py-2 text-right font-medium text-[#8b949e]">V_total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {gradeScenarios.map((g) => (
+                      <tr key={g.id} className="border-t border-[#30363d] hover:bg-[#21262d]/50">
+                        <td className="px-3 py-2 text-white font-medium">{g.name}</td>
+                        <td className="px-3 py-2 text-right font-mono text-[#a371f7]">${g.E_P_t1}</td>
+                        <td className="px-3 py-2 text-right font-mono text-[#a371f7]">+{g.priceChangePct}%</td>
+                        <td className="px-3 py-2 text-right font-mono text-[#8b949e]">{g.V_supply.toFixed(3)}</td>
+                        <td className="px-3 py-2 text-right font-mono text-[#8b949e]">{g.V_financial.toFixed(3)}</td>
+                        <td className="px-3 py-2 text-right font-mono text-[#c9d1d9]">{g.V_total.toFixed(3)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
         </>
       )}
 

@@ -26,7 +26,7 @@ The web app uses preset **J(t)** and **J(t+1)** scenarios (e.g. baseline vs. war
 
 ### SS-WOC (State Space model)
 
-The **SS-WOC** (State Space War Oil Crisis) model (Lee) reformulates the same sixteen-variable setup in linear state space form: **x(t+1) = Φx(t) + Γu(t) + w(t)**, with oil price **E[P(τ)]** from a log-normal conditional distribution (Kalman propagation). It is calibrated to the 1979–80 oil crisis and yields **credible intervals** and **VaR/CVaR**-style outputs. On the app, **Original WOC** and **SS-WOC** are shown **side by side** on the same war-intensity scale (u = 0 to 1) for easy comparison; SS-WOC projections are typically more conservative than the original deterministic Opc.
+The **SS-WOC** (State Space War Oil Crisis) model is based on **SS_WOC_Paper.pdf** (Lee, T.H., *SS-WOC: A State Space Framework for Geopolitical Oil Price Risk*; this paper replaces any earlier ss_wpc_paper.pdf). It reformulates the same sixteen-variable setup in linear state space form: **x(t+1) = Φx(t) + Γu(t) + w(t)**, with oil price **E[P(τ)]** from a log-normal conditional distribution (Kalman propagation). It is calibrated to the 1979–80 oil crisis and yields **credible intervals** and **VaR/CVaR**-style outputs. On the app, **Original WOC** and **SS-WOC** are shown **side by side** on the same war-intensity scale (u = 0 to 1) for easy comparison; SS-WOC projections are typically more conservative than the original deterministic Opc.
 
 ---
 
